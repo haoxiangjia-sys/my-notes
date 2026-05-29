@@ -4,8 +4,8 @@
   "title": "我想学卖呼吸机，需要学什么知识",
   "titleGenerationStatus": "failed",
   "createdAt": 1779967642932,
-  "updatedAt": 1779967672947,
-  "lastResponseAt": 1779967657869,
+  "updatedAt": 1780045533245,
+  "lastResponseAt": 1780045533245,
   "sessionId": "e48ea963-c8bf-4214-9c0e-37dc318f5e8a",
   "providerState": {
     "providerSessionId": "e48ea963-c8bf-4214-9c0e-37dc318f5e8a"
@@ -13,12 +13,12 @@
   "currentNote": "未命名.md",
   "usage": {
     "model": "haiku",
-    "inputTokens": 21515,
+    "inputTokens": 989,
     "cacheCreationInputTokens": 0,
-    "cacheReadInputTokens": 0,
+    "cacheReadInputTokens": 22912,
     "contextWindow": 200000,
-    "contextTokens": 21515,
-    "percentage": 11,
+    "contextTokens": 23901,
+    "percentage": 12,
     "contextWindowIsAuthoritative": true
   }
 }
