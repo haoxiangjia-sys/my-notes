@@ -179,7 +179,37 @@ MOV [a], EAX        ; a = EAX
 
 ---
 
-## ✏️ Key Terms
+## ⚡ 考试重点 Exam Focus
+
+### 🔥 High-Frequency Topics / 高频考点
+
+| Topic / 考点 | How it appears / 出现形式 | Priority |
+|:-------------|:--------------------------|:---------|
+| **Control flow in assembly / 用汇编写控制流** | Translate if-else / loop to assembly / 把 if-else/循环翻译成汇编 | ⭐⭐⭐⭐ |
+| **Status flags / 条件码标志** | NZCV: Negative, Zero, Carry, oVerflow / 各标志含义 | ⭐⭐⭐⭐ |
+| **Hardwired vs Microprogrammed control / 硬连线 vs 微编码** | Compare advantages / 优缺点对比 | ⭐⭐⭐ |
+| **ARM vs x86 / 对比** | RISC vs CISC philosophy / 设计哲学差异 | ⭐⭐⭐ |
+| **Conditional branch example / 条件分支示例** | JGE/JNZ usage, loop translation / JGE/JNZ 用法 | ⭐⭐⭐⭐ |
+
+### 📝 Question Bank Topic / Question Bank 考点
+
+**Microprogrammed control / 微编码控制**：
+```
+Question / 题目：When an instruction is decoded in a microprogrammed
+control processor, what must the Decoder do?
+在微编码控制的处理器中，译码器在译码后要做什么？
+
+Answer / 答案：Set the micro-program counter to the start address of
+the micro-program for that opcode.
+将微程序计数器设为该 opcode 对应的微程序的起始地址。
+```
+
+### ⚠️ Common Mistakes / 易错点
+- **Condition codes are SET by ALU operations, CHECKED by branch instructions** / 条件码由 ALU 设置，由分支指令检查
+- **JGE = Jump if Greater or Equal** (checks N flag: jump if N=0, i.e., result ≥ 0)
+- **JNZ = Jump if Not Zero** (checks Z flag: jump if Z=0, i.e., result ≠ 0)
+- **ARM is Load/Store** — only LDR/STR access memory / 只有加载/存储指令能访存
+- **x86 can operate directly on memory** — `ADD EAX, [mem]` is legal / 可以直接操作内存
 
 | English | 中文 |
 |:--------|:-----|

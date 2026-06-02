@@ -131,7 +131,40 @@ ALU = **算术逻辑单元**，CPU 的"计算核心"
 
 ---
 
-## ✏️ Key Terms
+## ⚡ 考试重点 Exam Focus
+
+### 🔥 High-Frequency Topics / 高频考点
+
+| Topic / 考点 | How it appears / 出现形式 | Priority |
+|:-------------|:--------------------------|:---------|
+| **74181 ALU function table / ALU 功能表** | Given S3-S0 and M, what operation? / 给控制信号问运算 | ⭐⭐⭐⭐ |
+| **Ripple-carry adder / 行波进位加法器** | How cascading works / 如何级联扩展位宽 | ⭐⭐⭐ |
+| **Adder-subtractor / 加减法器** | Using XOR + carry-in for two's complement / XOR + 进位实现减法 | ⭐⭐⭐ |
+| **Addressing modes / 寻址方式** | Classify: immediate/direct/indirect/indexed/base/PC-relative / 分类各种寻址方式 | ⭐⭐⭐⭐ |
+
+### 📝 Question Bank Exam Question / Question Bank 考题
+
+```
+Q: An adder-subtractor uses XOR gates to combine one input with the control
+signal. Which gate is used? Why?
+题目：加减法器用哪种逻辑门来组合输入和控制信号？为什么？
+
+A: XOR gate / XOR 门
+   Because XOR flips the bit when control=1 (for subtraction / 减法时取反)
+   and passes it through when control=0 (for addition / 加法时不变)
+
+   XOR truth table / 真值表：
+   control | input | output
+      0    |   0   |   0    ← pass through / 直通
+      0    |   1   |   1    ← pass through / 直通
+      1    |   0   |   1    ← invert / 取反
+      1    |   1   |   0    ← invert / 取反
+```
+
+### ⚠️ Common Mistakes / 易错点
+- **74181 is 4-bit** — two chips needed for 8-bit (Hex 8) / 两片级联成 8 位
+- **Immediate vs Direct addressing** — immediate: value is IN the instruction; direct: value is AT the address in the instruction / 立即数 vs 直接寻址的区别
+- **Indirect addressing** = M[M[addr]] — two memory accesses / 两次访存
 
 | English | 中文 |
 |:--------|:-----|

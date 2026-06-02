@@ -217,72 +217,65 @@ done:
 
 ## ⚡ 考试重点 Exam Focus
 
-### 🔥 高频考点
+### 🔥 High-Frequency Topics / 高频考点
 
-| 考点 | 出现形式 | 重要程度 |
-|:-----|:---------|:---------|
-| **Cache 映射计算** | 给地址算 Tag/Index/Offset，判断 Hit/Miss | ⭐⭐⭐⭐⭐ |
-| **三种映射对比** | 直接映射 / 组相联 / 全相联的优缺点 | ⭐⭐⭐⭐ |
-| **写策略** | Write-through vs Write-back + 脏位 | ⭐⭐⭐⭐ |
-| **替换策略** | LRU 替换时哪一行被踢出 | ⭐⭐⭐⭐ |
-| **Cache 性能公式** | 给 Hit Time, Miss Rate, Miss Penalty 算平均访问时间 | ⭐⭐⭐ |
-| **3C Miss** | 三种 Miss 类型区分 | ⭐⭐⭐ |
+| Topic / 考点 | How it appears / 出现形式 | Priority / 重要程度 |
+|:-------------|:--------------------------|:-------------------|
+| **Cache mapping calculation / Cache 映射计算** | Given address → compute Tag/Index/Offset, hit/miss / 给地址算 Tag/Index/Offset | ⭐⭐⭐⭐⭐ |
+| **Three mapping schemes / 三种映射对比** | Direct-mapped vs Set-associative vs Fully-associative / 优缺点对比 | ⭐⭐⭐⭐ |
+| **Write policy / 写策略** | Write-through vs Write-back + dirty bit / 脏位 | ⭐⭐⭐⭐ |
+| **Replacement policy / 替换策略** | LRU: which line gets evicted? / LRU 替换哪一行 | ⭐⭐⭐⭐ |
+| **Cache performance formula / 性能公式** | Avg access time = Hit Time + Miss Rate × Miss Penalty | ⭐⭐⭐ |
+| **3C Misses / 三种 Miss** | Compulsory vs Capacity vs Conflict / 区分三种缺失 | ⭐⭐⭐ |
 
-### 📝 经典考题：Cache 映射计算
+### 📝 Classic Exam Question: Cache Mapping / 经典考题：Cache 映射计算
 
-**题型：直接映射 Cache 的 Tag/Index/Offset 计算**
-
-```
-题目：
-  64 KB 直接映射 Cache，每行 64 字节
-  内存地址 32 位
-  问：访问地址 0x12345678，Cache 的 Index 和 Tag 是多少？
-
-解法：
-  Offset = log₂(64) = 6 位
-  行数 = 64KB / 64B = 1024 行
-  Index  = log₂(1024) = 10 位
-  Tag    = 32 - 10 - 6 = 16 位
-
-  0x12345678 = 0001 0010 0011 0100 0101 0110 0111 1000
-  ┌──────────────┬──────────┬────────┐
-  │ Tag (16位)    │Idx (10位)│Off(6位)│
-  │ 0001 0010 0011 01│00 0101 01│10 0111 00│
-  └──────────────┴──────────┴────────┘
-
-  Index = 00 0101 01 = 0x55 (85)
-  Tag   = 0001 0010 0011 01 = 0x1234... 不对
-
-  更简单：
-  Offset = addr & 0x3F          ; 低 6 位
-  Index  = (addr >> 6) & 0x3FF  ; 接下来 10 位
-  Tag    = addr >> 16            ; 剩下 16 位
-
-  Index = (0x12345678 >> 6) & 0x3FF = 0x159D8 >> ... 
-  🔑 最好用计算器或纸笔算二进制
-```
-
-**题型：LRU 替换**
+**Direct-mapped Cache: Tag/Index/Offset calculation / 直接映射 Cache 的 Tag/Index/Offset 计算**
 
 ```
-题目：2 路组相联 Cache，某组初始为空
-  访问序列：A, B, C, A, B
-  问：每次 Hit/Miss？最后组里有哪些行？
+Question / 题目：
+  64 KB direct-mapped cache, 64-byte lines, 32-bit address
+  64 KB 直接映射 Cache，每行 64 字节，32 位地址
+  Access address 0x12345678: what are Tag, Index, Offset?
+  访问地址 0x12345678：Tag、Index、Offset 是多少？
 
-解法：
-  访问 A: Miss, 放 Way0 [A, -]
-  访问 B: Miss, 放 Way1 [A, B]
-  访问 C: Miss, LRU 踢 A, 放 C [C, B]
-  访问 A: Miss, LRU 踢 B, 放 A [C, A]
-  访问 B: Miss, LRU 踢 C, 放 B [B, A]
-  （A 和 B 反复被踢出...这就是 Cache 颠簸 thrashing）
+Solution / 解法：
+  Offset = log₂(64) = 6 bits / 位
+  Number of lines / 行数 = 64KB / 64B = 1024
+  Index  = log₂(1024) = 10 bits / 位
+  Tag    = 32 - 10 - 6 = 16 bits / 位
+
+  Offset = addr & 0x3F           ; low 6 bits / 低 6 位
+  Index  = (addr >> 6) & 0x3FF  ; next 10 bits / 接下来 10 位
+  Tag    = addr >> 16            ; remaining 16 bits / 剩下 16 位
 ```
 
-### ⚠️ 易错点
-- **直接映射计算 Index 时不要忘记 Offset** — Index = (addr >> OffsetBits) & (NumSets-1)
-- **组相联的 Index 选组，组内对比 Tag** — 不是直接在组内用 Index！
-- **Write-back + 脏位**：换出脏行时必须写回内存，干净行可以直接覆盖
-- **3C Miss 区分**：Compulsory = 第一次访问；Capacity = 工作集太大；Conflict = 映射冲突
+**LRU Replacement / LRU 替换**
+
+```
+Question / 题目：2-way set-associative cache, empty initially
+                 2 路组相联 Cache，某组初始为空
+  Access sequence / 访问序列：A, B, C, A, B
+  Hit or Miss each time? Final content?
+  每次 Hit/Miss？最后组里有哪些行？
+
+Answer / 答案：
+  A: Miss, put in Way0 [A, -]
+  B: Miss, put in Way1 [A, B]
+  C: Miss, LRU evicts A, put C [C, B]
+  A: Miss, LRU evicts B, put A [C, A]
+  B: Miss, LRU evicts C, put B [B, A]
+  → Thrashing / 颠簸！ A and B keep evicting each other / 反复互相踢出
+```
+
+### ⚠️ Common Mistakes / 易错点
+- **When computing Index, don't forget Offset!** Index = (addr >> OffsetBits) & (NumSets-1)
+- **Set-associative**: Index chooses the **set**, then compare **all Tags** in that set / Index 选组，组内对比所有 Tag
+- **Write-back + dirty bit**: dirty line MUST write back to memory on eviction; clean line can be overwritten / 脏行换出时必须写回
+- **3C Misses / 三种 Miss 区分**:
+  - Compulsory = first access ever / 第一次访问
+  - Capacity = working set too big / 工作集太大
+  - Conflict = multiple blocks fight for same cache line / 映射冲突
 
 | English | 中文 |
 |:--------|:-----|
