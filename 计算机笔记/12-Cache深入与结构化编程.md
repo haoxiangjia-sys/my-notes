@@ -215,7 +215,74 @@ done:
 
 ---
 
-## ✏️ Key Terms
+## ⚡ 考试重点 Exam Focus
+
+### 🔥 高频考点
+
+| 考点 | 出现形式 | 重要程度 |
+|:-----|:---------|:---------|
+| **Cache 映射计算** | 给地址算 Tag/Index/Offset，判断 Hit/Miss | ⭐⭐⭐⭐⭐ |
+| **三种映射对比** | 直接映射 / 组相联 / 全相联的优缺点 | ⭐⭐⭐⭐ |
+| **写策略** | Write-through vs Write-back + 脏位 | ⭐⭐⭐⭐ |
+| **替换策略** | LRU 替换时哪一行被踢出 | ⭐⭐⭐⭐ |
+| **Cache 性能公式** | 给 Hit Time, Miss Rate, Miss Penalty 算平均访问时间 | ⭐⭐⭐ |
+| **3C Miss** | 三种 Miss 类型区分 | ⭐⭐⭐ |
+
+### 📝 经典考题：Cache 映射计算
+
+**题型：直接映射 Cache 的 Tag/Index/Offset 计算**
+
+```
+题目：
+  64 KB 直接映射 Cache，每行 64 字节
+  内存地址 32 位
+  问：访问地址 0x12345678，Cache 的 Index 和 Tag 是多少？
+
+解法：
+  Offset = log₂(64) = 6 位
+  行数 = 64KB / 64B = 1024 行
+  Index  = log₂(1024) = 10 位
+  Tag    = 32 - 10 - 6 = 16 位
+
+  0x12345678 = 0001 0010 0011 0100 0101 0110 0111 1000
+  ┌──────────────┬──────────┬────────┐
+  │ Tag (16位)    │Idx (10位)│Off(6位)│
+  │ 0001 0010 0011 01│00 0101 01│10 0111 00│
+  └──────────────┴──────────┴────────┘
+
+  Index = 00 0101 01 = 0x55 (85)
+  Tag   = 0001 0010 0011 01 = 0x1234... 不对
+
+  更简单：
+  Offset = addr & 0x3F          ; 低 6 位
+  Index  = (addr >> 6) & 0x3FF  ; 接下来 10 位
+  Tag    = addr >> 16            ; 剩下 16 位
+
+  Index = (0x12345678 >> 6) & 0x3FF = 0x159D8 >> ... 
+  🔑 最好用计算器或纸笔算二进制
+```
+
+**题型：LRU 替换**
+
+```
+题目：2 路组相联 Cache，某组初始为空
+  访问序列：A, B, C, A, B
+  问：每次 Hit/Miss？最后组里有哪些行？
+
+解法：
+  访问 A: Miss, 放 Way0 [A, -]
+  访问 B: Miss, 放 Way1 [A, B]
+  访问 C: Miss, LRU 踢 A, 放 C [C, B]
+  访问 A: Miss, LRU 踢 B, 放 A [C, A]
+  访问 B: Miss, LRU 踢 C, 放 B [B, A]
+  （A 和 B 反复被踢出...这就是 Cache 颠簸 thrashing）
+```
+
+### ⚠️ 易错点
+- **直接映射计算 Index 时不要忘记 Offset** — Index = (addr >> OffsetBits) & (NumSets-1)
+- **组相联的 Index 选组，组内对比 Tag** — 不是直接在组内用 Index！
+- **Write-back + 脏位**：换出脏行时必须写回内存，干净行可以直接覆盖
+- **3C Miss 区分**：Compulsory = 第一次访问；Capacity = 工作集太大；Conflict = 映射冲突
 
 | English | 中文 |
 |:--------|:-----|
