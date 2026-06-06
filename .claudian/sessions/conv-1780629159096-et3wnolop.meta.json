@@ -1,0 +1,23 @@
+{
+  "id": "conv-1780629159096-et3wnolop",
+  "providerId": "claude",
+  "title": "public int lengthOfLongestSubstring(String s) {",
+  "titleGenerationStatus": "failed",
+  "createdAt": 1780629159096,
+  "updatedAt": 1780751028485,
+  "lastResponseAt": 1780751028485,
+  "sessionId": "83de930b-311f-411a-a15e-c0726eeb3b71",
+  "providerState": {
+    "providerSessionId": "83de930b-311f-411a-a15e-c0726eeb3b71"
+  },
+  "usage": {
+    "model": "haiku",
+    "inputTokens": 164,
+    "cacheCreationInputTokens": 0,
+    "cacheReadInputTokens": 44928,
+    "contextWindow": 200000,
+    "contextTokens": 45092,
+    "percentage": 23,
+    "contextWindowIsAuthoritative": true
+  }
+}
