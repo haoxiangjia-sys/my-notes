@@ -1,5 +1,14 @@
 # Obsidian
 .obsidian/workspace.json
+.obsidian/workspace-mobile.json
 .obsidian/workspace
-.obsidian/cache
+.obsidian/cache/
 .trash/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude AI
+.claude/
+.claudian/
