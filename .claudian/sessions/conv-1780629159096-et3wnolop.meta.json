@@ -4,19 +4,19 @@
   "title": "public int lengthOfLongestSubstring(String s) {",
   "titleGenerationStatus": "failed",
   "createdAt": 1780629159096,
-  "updatedAt": 1780751028485,
-  "lastResponseAt": 1780751028485,
+  "updatedAt": 1780794852280,
+  "lastResponseAt": 1780794852280,
   "sessionId": "83de930b-311f-411a-a15e-c0726eeb3b71",
   "providerState": {
     "providerSessionId": "83de930b-311f-411a-a15e-c0726eeb3b71"
   },
   "usage": {
     "model": "haiku",
-    "inputTokens": 164,
+    "inputTokens": 736,
     "cacheCreationInputTokens": 0,
-    "cacheReadInputTokens": 44928,
+    "cacheReadInputTokens": 46208,
     "contextWindow": 200000,
-    "contextTokens": 45092,
+    "contextTokens": 46944,
     "percentage": 23,
     "contextWindowIsAuthoritative": true
   }
