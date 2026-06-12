@@ -1,5 +1,5 @@
 {
-  "userId": "6c224061-c318-41dc-a56d-1079cf1bb85a",
+  "userId": "495b2765-a670-4d8c-863e-78a56cb334d6",
   "isPlusUser": false,
   "plusLicenseKey": "",
   "openAIApiKey": "",
@@ -506,5 +506,5 @@
   "autoCompactThreshold": 128000,
   "convertedDocOutputFolder": "",
   "_keychainOnly": true,
-  "_keychainVaultId": "7f0eed38"
+  "_keychainVaultId": "3416b7da"
 }
