@@ -1,180 +1,327 @@
 # 09 — ALU 与寻址方式（W14）
 ## Arithmetic Logic Unit & Addressing Modes
 
+> 📖 课件：![[计算机笔记/resources/14_A_ALU.pdf]] | ![[计算机笔记/resources/14_B_addressing_modes.pdf]]
+
 ---
 
 ## 1. ALU 深入（TI 74181）
 
-### ALU 功能回顾
+### ALU = 算术逻辑单元
 
-ALU = **算术逻辑单元**，CPU 的"计算核心"
+CPU 的"计算核心"。能做算术（加减）也能做逻辑（AND/OR/XOR）。
 
 ### TI 74181 芯片
 
-**74181** 是经典的 4 位 ALU 芯片，课程用它来讲解 ALU 内部原理：
+**74181** 是经典的 4 位 ALU 芯片：
 
 | 特性 | 说明 |
 |:-----|:------|
-| **位宽** | 4 位（可级联成 8/16/32 位）|
-| **功能** | 16 种逻辑运算 + 16 种算术运算（共 32 种）|
-| **选择线** | S0-S3（4 位，选哪种运算）|
-| **模式线** | M（M=0 算术，M=1 逻辑）|
-| **进位** | 进位输入 \$C_{-n}\$ + 进位输出 \$C_{n+4}\$ |
+| **位宽** | 4 位（可级联成 8/16/32 位） |
+| **功能** | 16 种逻辑运算 + 16 种算术运算（共 32 种） |
+| **选择线** | S3-S0（4 位，选哪种运算） |
+| **模式线** | M（M=0 → 算术，M=1 → 逻辑） |
+| **进位** | Cₙ（进位输入）+ Cₙ₊₄（进位输出） |
 
 ```
           ┌──────────┐
-  A0 ────►│          │
-  A1 ────►│          │
-  A2 ────►│  74181   │────► F0
-  A3 ────►│   ALU    │────► F1
-          │          │────► F2
-  B0 ────►│          │────► F3
-  B1 ────►│          │
-  B2 ────►│          │────► \$C_{n+4}\$ (进位输出)
-  B3 ────►│          │
+  A₀~A₃ ─►│          │──► F₀~F₃ (结果)
+  B₀~B₃ ─►│  74181   │──► Cₙ₊₄ (进位输出)
+  Cₙ    ──►│   ALU    │
           └──┬───┬───┘
-             │   │
-     S0-S3 (选择) M (模式)
+         S₀~S₃ (选运算)  M=0:算术 / M=1:逻辑
 ```
 
 ### 典型 74181 运算举例
 
-| S3-S0 | M=1（逻辑）| M=0（算术）|
-|:-----:|:----------|:-----------|
-| 0000 | \$\overline{A}\$ | A 加 1（取反加）|
-| 0001 | \$\overline{A+B}\$ (NOR) | A \| B 加 1 |
-| 0010 | \$\overline{A} \cdot B\$ | A + B 加 1（取反加B）|
-| 0110 | \$A \oplus B\$ (XOR) | A 减 B |
+| S3-S0 | M=1（逻辑） | M=0（算术） |
+|:-----:|:-----------|:-----------|
+| 0000 | Ā | A + 1 |
+| 0001 | Ā + B̄ (NOR) | A + B + 1 |
+| 0110 | A ⊕ B (XOR) | A − B |
 | 1010 | B | A + B |
-| 1100 | 0 | A 加 A（左移一位）|
+| 1100 | 0 | A + A（左移一位） |
 
 ### 级联 Cascade（扩展位宽）
 
 ```
-4 位 ALU → 8 位 ALU：
-  低位芯片的进位输出 \$C_{n+4}\$ → 高位芯片的进位输入 \$C_{-n}\$
-
-  例：Hex 8 的 ALU 用 2 片 74181 级联成 8 位
+4-bit ALU → 8-bit ALU：
+  低位芯片的 Cₙ₊₄ → 高位芯片的 Cₙ
+  
+  Hex 8 的 ALU：2 片 74181 级联 → 8 位
 ```
 
 ---
 
 ## 2. 寻址方式 Addressing Modes
 
-### 什么是寻址方式？
+### 先搞清楚一个问题
 
-**寻址方式** = 指令中如何指定**操作数**的位置 / How an instruction specifies where its operand is
+```c
+// C 代码
+int r = a + 1;
+```
 
-### Hex 8 的局限性
+CPU 执行这条加法，需要知道三件事：
+1. **`a` 在哪？**（操作数 1 的位置）
+2. **`1` 在哪？**（操作数 2 的位置）  
+3. **结果放哪？**（`r` 的位置）
 
-> 因为 Hex 8 指令只有 4 位 operand，**直接寻址只能访问前 16 个内存地址**（0-15）。
+**寻址方式 = 回答"操作数在哪"的方式。**
 
-解决办法：用不同的**寻址方式**来访问更多内存。
+---
 
-### 常见寻址方式
+### 标记约定 Notation
 
-| 方式 | 说明 | 示例 | 访问位置 |
-|:-----|:-----|:-----|:---------|
-| **立即数 Immediate** | 操作数就在指令里 | `LDI #5` | operand = 5 |
-| **直接寻址 Direct** | 操作数是内存地址 | `LDA 20` | M[20] |
-| **寄存器 Register** | 操作数在寄存器里 | `ADD R1` | R0 = R0 + R1 |
-| **间接寻址 Indirect** | 地址在寄存器/内存里 | `LDA (R1)` | M[M[R1]] |
-| **变址 Indexed** | 基址 + 偏移量 | `LDA 100(R1)` | M[R1 + 100] |
-| **基址 Base** | 基址寄存器 + 偏移 | `LDA (R1+5)` | M[R1 + 5] |
-| **相对寻址 PC-relative** | PC + 偏移量 | `BEQ +10` | PC + 10 |
-| **自动增/减量 Auto-increment** | 访问后地址+1 | `LDA (R1)+` | M[R1], 然后 R1++ |
+| 标记 | 含义 |
+|:-----|:-----|
+| `GPR[i]` | 第 i 个通用寄存器里的**值** |
+| `MEM[i]` | 内存地址 i 处存的**值** |
 
-### Hex 8 如何用寻址突破 4 位限制？
+---
+
+### 方式一：立即数 Immediate
+
+> **操作数的值直接写在指令里。** 最快，但受指令长度限制。
+
+```c
+r = t + 1;                    // 1 就是"立即数"
+```
 
 ```
-技巧 1：用 R1 存高位地址
-  LDI  #15        ; R0 = 15
-  STA  R1         ; R1 = 15（存高位）
-  LDI  #0         ; R0 = 0
-  ADD  R1         ; R0 = 15 + 0 = 15? 不对，这是加法不是地址
+ARM 汇编：
+  add r0, r1, #1              ; GPR[0] ← GPR[1] + 1
+                               ;         ↑ 1 就在指令里，不额外访存
+```
 
-实际 Hex 8 通过变址间接寻址来扩展：
-  把 R1 当作地址指针，用类似 LDA (R1) 的方式
-  这样能访问 0-255 的完整地址空间
+```
+Hex 8：
+  LDI #5                      ; R0 ← 5，立即数直接给
+```
+
+| 优点 | 缺点 |
+|:-----|:-----|
+| 不额外访存，快 | 值的大小受指令 operand 位数限制 |
+
+---
+
+### 方式二：直接寻址 Direct
+
+> **操作数是寄存器号或内存地址。**
+
+又分两种：
+
+#### 寄存器直接 Register Direct
+
+```c
+r = a + b;                    // a 和 b 在寄存器里
+```
+
+```
+ARM 汇编：
+  add r0, r1, r2              ; GPR[0] ← GPR[1] + GPR[2]
+```
+
+#### 内存直接 Memory Direct
+
+```
+Hex 8：
+  LDA 20                      ; R0 ← MEM[20]，读内存地址 20 的值
 ```
 
 ---
 
-## 3. Hex 8 寻址实验
+### 方式三：间接寻址 Indirect
 
-### 如何实现间接寻址？
+> **操作数是"地址的地址"。** 寄存器里存的是指针。
 
-```
-直接寻址：ADD  addr   →  R0 = R0 + M[addr]
-间接寻址：ADD (addr)  →  R0 = R0 + M[M[addr]]
-
-即：先读 addr 处的值作为"指针"，再读指针指向的位置
+```c
+r = *t + 1;                   // t 是"指针"，*t 是"指针对应的值"
 ```
 
-### 实验：用 Hex 8 实现数组访问
+```
+ARM 汇编：
+  add r0, [r1], #1            ; GPR[0] ← MEM[GPR[1]] + 1
+                               ;          ↑ r1 存地址，先去那读值
+```
 
 ```
-内存布局：
-  addr 0:  存数组首地址（如 100）
-  addr 1:  存数组索引（如 5）
-  addr 100-105: 数组数据
-
-要求：R0 = arr[5]
-
-实现思路：
-  1. LDA 0      ; R0 = 首地址 100
-  2. STA R1     ; R1 = 100（基址）
-  3. LDA 1      ; R0 = 索引 5
-  4. ADD R1     ; R0 = 105（目标地址）
-  5. ...        ; 访问 M[105]
+Hex 8：
+  LDA (R1)                    ; R0 ← MEM[GPR[R1]]
+                               ;       R1 存的是地址，去那个地址取值
 ```
+
+**两步走**：先从寄存器读取地址 → 再根据地址从内存读数据。所以比直接寻址多访存一次。
+
+---
+
+### 方式四：变址寻址 Indexed
+
+> **基地址 + 偏移量。** 专门访问结构体和数组。
+
+```c
+typedef struct {               // 结构体
+    uint8_t r;                 // offset +0
+    uint8_t g;                 // offset +1  ← 想访问这个
+    uint8_t b;                 // offset +2
+} pt;
+
+pt p;                          // p 在内存中
+// 访问 p.g = ?
+```
+
+不用变址寻址的话，要 3 条指令：
+
+```
+1. GPR[0] = &p                 // 加载 p 的首地址
+2. GPR[1] = GPR[0] + 1        // 手动加偏移量 1（g 的偏移）
+3. GPR[2] = MEM[GPR[1]]       // 加载 p.g
+```
+
+有了变址寻址，**1 条指令搞定**：
+
+```
+ARM 汇编：
+  ldrb r2, [r0, #1]           ; GPR[2] ← MEM[GPR[0] + 1]
+                               ;                     ↑ 基址 + 偏移
+  ldrb r2, [r0, r1]           ; 偏移也可以放在寄存器里
+                               ; GPR[2] ← MEM[GPR[0] + GPR[1]]
+```
+
+> 数组访问也是变址：`A[i]` = 基址 `&A[0]` + 偏移量 `i × sizeof(element)`
+
+---
+
+### 方式五：自动增量 Auto-indexed
+
+> **变址寻址 + 自动更新地址。** 数组遍历的终极优化。
+
+```c
+for (int i = 0; i < N; i++) {
+    r += A[i];                  // 每次读 A[i]，然后 i++
+}
+```
+
+不用自动增量，每轮都要手动：读值 → 加偏移 → i++。有了自动增量：
+
+```
+ARM 汇编：
+  ldrb r2, [r1], #1            ; GPR[2] ← MEM[GPR[1]]
+                               ; 然后 GPR[1] ← GPR[1] + 1
+                               ;          ↑ 自动更新地址，i++ 省了
+```
+
+> ARM 称此为 **post-indexed addressing**。
+
+---
+
+### 方式六：PC 相对寻址 PC-relative
+
+> **目标地址 = PC（当前指令地址）+ 偏移量。** 专用于分支/跳转。
+
+```
+ARM 汇编：
+  beq +10                      ; 如果相等，跳 PC+10（不是地址 10）
+  
+  ldr r1, [pc, #8]             ; 加载 PC+8 处的常量（literal pool）
+```
+
+为什么用相对而不是绝对地址？因为代码可以被加载到内存**任意位置**，相对地址不需要修改。
+
+---
+
+## 3. 为什么要多种寻址方式？→ 编码压力
+
+指令里 operand 只有那么几位（比如 8 位）。如果只能存立即数：
+
+```
+8 位 operand → 最多表示 0~255（无符号）
+              → 只能访问 256 个内存位置
+              → 只能用到 256 以内的立即数
+```
+
+**不同寻址方式就是对这有限位数的不同"用法"：**
+
+| 寻址方式 | 8 位 operand 代表什么 | 实际能访问 |
+|:---------|:---------------------|:-----------|
+| Immediate | 直接就是值 | 0~255 |
+| Direct | 内存地址 | MEM[0~255] → 能存 **32-bit 的字** |
+| Indirect | 存地址的地址 | MEM[GPR[r₁]] → 寄存器是 8 位但能指向**整个地址空间** |
+
+> 所以 indirect 让 8 位 operand 也能访问远超 256 字节的内存。这就是寻址方式存在的核心意义。
+
+---
+
+## 4. CISC vs RISC 寻址方式差异
+
+| | CISC（如 x86） | RISC（如 ARM） |
+|:--|:---------------|:---------------|
+| 寻址方式数量 | **多**（各种组合） | **少**（保持简洁） |
+| 一条指令能做多少 | 多（可能直接操作内存） | 少（Load/Store 架构） |
+| 设计理念 | 硬件复杂，指令强大 | 硬件简单，编译器配合 |
 
 ---
 
 ## ⚡ 考试重点 Exam Focus
 
-### 🔥 High-Frequency Topics / 高频考点
+### 高频考点
 
-| Topic / 考点 | How it appears / 出现形式 | Priority |
-|:-------------|:--------------------------|:---------|
-| **74181 ALU function table / ALU 功能表** | Given S3-S0 and M, what operation? / 给控制信号问运算 | ⭐⭐⭐⭐ |
-| **Ripple-carry adder / 行波进位加法器** | How cascading works / 如何级联扩展位宽 | ⭐⭐⭐ |
-| **Adder-subtractor / 加减法器** | Using XOR + carry-in for two's complement / XOR + 进位实现减法 | ⭐⭐⭐ |
-| **Addressing modes / 寻址方式** | Classify: immediate/direct/indirect/indexed/base/PC-relative / 分类各种寻址方式 | ⭐⭐⭐⭐ |
+| 考点 | 出题形式 | 重要度 |
+|:-----|:--------|:------|
+| 74181 ALU 功能表 | 给 S3-S0 和 M，问执行什么运算 | ⭐⭐⭐⭐ |
+| 行波进位加法器 | 如何级联扩展位宽 | ⭐⭐⭐ |
+| 加减法器 | XOR + 进位实现补码减法 | ⭐⭐⭐ |
+| **寻址方式分类** | 给 C 代码/汇编，判断用了哪种寻址方式 | ⭐⭐⭐⭐ |
+| **编码压力** | 解释为什么需要不同寻址方式 | ⭐⭐⭐ |
 
-### 📝 Question Bank Exam Question / Question Bank 考题
+### 问答模板
 
 ```
-Q: An adder-subtractor uses XOR gates to combine one input with the control
-signal. Which gate is used? Why?
-题目：加减法器用哪种逻辑门来组合输入和控制信号？为什么？
+Q: An adder-subtractor uses XOR gates. Why?
 
-A: XOR gate / XOR 门
-   Because XOR flips the bit when control=1 (for subtraction / 减法时取反)
-   and passes it through when control=0 (for addition / 加法时不变)
+A: XOR gate.
+   当 control=0 → 直通（加法，输入不变）
+   当 control=1 → 取反（减法，配合补码）
 
-   XOR truth table / 真值表：
-   control | input | output
-      0    |   0   |   0    ← pass through / 直通
-      0    |   1   |   1    ← pass through / 直通
-      1    |   0   |   1    ← invert / 取反
-      1    |   1   |   0    ← invert / 取反
+   control | B | output
+      0    | 0 |   0    ← 直通（pass through）
+      0    | 1 |   1    ← 直通
+      1    | 0 |   1    ← 取反（invert）
+      1    | 1 |   0    ← 取反
 ```
 
-### ⚠️ Common Mistakes / 易错点
-- **74181 is 4-bit** — two chips needed for 8-bit (Hex 8) / 两片级联成 8 位
-- **Immediate vs Direct addressing** — immediate: value is IN the instruction; direct: value is AT the address in the instruction / 立即数 vs 直接寻址的区别
-- **Indirect addressing** = M[M[addr]] — two memory accesses / 两次访存
+```
+Q: Classify the addressing mode in "ldr r2, [r0, #4]"
 
-| English | 中文 |
-|:--------|:-----|
-| ALU (Arithmetic Logic Unit) | 算术逻辑单元 |
-| 74181 | 4 位 ALU 芯片 |
-| cascade / ripple carry | 级联 / 行波进位 |
-| addressing mode | 寻址方式 |
-| immediate | 立即数寻址 |
-| direct addressing | 直接寻址 |
-| indirect addressing | 间接寻址 |
-| indexed addressing | 变址寻址 |
-| base addressing | 基址寻址 |
-| PC-relative | 相对寻址 |
+A: Indexed addressing mode（变址寻址）
+   GPR[2] ← MEM[GPR[0] + 4]
+   基址寄存器 r0 + 立即数偏移 4 → 结构体字段/数组元素访问
+```
+
+---
+
+### 易错点 ⚠️
+
+- ❗ **Immediate** ≠ **Direct**：immediate = 值在指令里；direct = 值是地址，数据在寄存器/内存里
+- ❗ **Indirect** = **两次访存**：`MEM[GPR[r₁]]` 先读寄存器得地址，再去内存读数据
+- ❗ **Indexed** ≠ **Indirect**：indexed = 基址 **+ 偏移**；indirect = 纯指针
+- ❗ **PC-relative**：偏移是**相对于 PC 当前值**，不是绝对地址 0
+- ❗ 74181 是 4-bit：Hex 8（8 位）需要**2 片**级联
+
+---
+
+### 术语表
+
+| English | 中文 | 一句话 |
+|:--------|:-----|:-------|
+| addressing mode | 寻址方式 | 指令怎么找到操作数 |
+| immediate | 立即数 | 值在指令里 |
+| direct | 直接寻址 | 操作数给的是寄存器号或地址 |
+| indirect | 间接寻址 | 寄存器指向地址，地址再指向数据 |
+| indexed | 变址寻址 | 基址 + 偏移 |
+| auto-indexed | 自动增量 | 变址 + 自动更新地址 |
+| encoding pressure | 编码压力 | operand 位数有限，逼出不同寻址方式 |
+| ALU | 算术逻辑单元 | 加减与或非都靠它 |
+| cascade | 级联 | 多片 ALU 串联扩展位宽 |
+| ripple carry | 行波进位 | 进位逐位传播 |
+| PC-relative | PC 相对寻址 | 分支/跳转用的相对地址 |

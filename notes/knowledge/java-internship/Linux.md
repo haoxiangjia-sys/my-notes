@@ -279,4 +279,149 @@ date                           # 当前时间
 
 ---
 
-**相关笔记**: [[_index]] · [[sql/mysql]]
+## SQL 与 Linux 联动
+
+> **Linux 是操作系统，MySQL 是安装在 Linux 上的一个服务。你通过 Linux 终端输入 mysql 命令来操作数据库。**
+
+### 关系图
+
+```
+┌─────────────────────────────────────────┐
+│              Linux (Ubuntu)              │
+│                                          │
+│  ┌──────────┐    ┌───────────────────┐  │
+│  │ 终端/bash │───▶│  mysql 客户端      │  │
+│  └──────────┘    └───────┬───────────┘  │
+│                          │               │
+│  ┌───────────────────────▼───────────┐  │
+│  │  MySQL 服务 (mysqld)              │  │
+│  │  - 监听 3306 端口                 │  │
+│  │  - systemctl 管理启停             │  │
+│  │  - 日志在 /var/log/mysql/         │  │
+│  └───────────────────────────────────┘  │
+└─────────────────────────────────────────┘
+```
+
+### 在 Ubuntu 上安装 MySQL
+
+```bash
+# 1. 安装 MySQL Server
+sudo apt update
+sudo apt install mysql-server -y
+
+# 2. 查看服务状态（systemctl = Linux 命令管理 MySQL 这个服务）
+sudo systemctl status mysql
+
+# 3. 启动 + 开机自启
+sudo systemctl start mysql
+sudo systemctl enable mysql
+
+# 4. 安全初始化（设 root 密码、删匿名用户等）
+sudo mysql_secure_installation
+
+# 5. 用 root 登录
+sudo mysql
+# 或者创建普通用户后：
+mysql -u youruser -p
+```
+
+### Linux 命令 ↔ MySQL/SQL 对应关系
+
+| 你要做的事 | Linux 命令 | MySQL/SQL |
+|-----------|-----------|-----------|
+| 启动服务 | `systemctl start mysql` | — |
+| 查看进程 | `ps -ef \| grep mysql` | — |
+| 查看端口 | `ss -tlnp \| grep 3306` | — |
+| 查看日志 | `tail -f /var/log/mysql/error.log` | — |
+| 连接数据库 | `mysql -u root -p` | — |
+| 查看有哪些库 | — | `SHOW DATABASES;` |
+| 查看有哪些表 | — | `SHOW TABLES;` |
+| 查数据 | — | `SELECT * FROM user;` |
+| 备份数据库 | `mysqldump -u root -p db > backup.sql` | — |
+| 恢复数据库 | `mysql -u root -p db < backup.sql` | — |
+
+### 日常使用流程
+
+```bash
+# 第1步：打开终端（就是你的 Ubuntu 终端）
+# 第2步：检查 MySQL 是否在跑（Linux 命令）
+sudo systemctl status mysql
+ss -tlnp | grep 3306          # 端口在不在监听
+
+# 第3步：如果没跑就启动（Linux 命令）
+sudo systemctl start mysql
+
+# 第4步：连上数据库（从 Linux 终端进入 MySQL 交互界面）
+mysql -u root -p
+
+# 第5步：现在你在 MySQL 里了，写 SQL
+USE practice;
+SELECT * FROM user;
+SELECT COUNT(*) FROM orders WHERE status = 'PENDING';
+EXIT;   -- 退出 MySQL，回到 Linux 终端
+```
+
+### 一行命令执行 SQL（不进入交互界面）
+
+```bash
+# 在 Linux 终端直接执行 SQL，拿结果
+mysql -u root -proot123 practice -e "SELECT * FROM user;"
+
+# 结合 Linux 管道：查完数据后用 grep/tail 过滤
+mysql -u root -proot123 practice -e "SELECT * FROM user;" | grep "zhang"
+mysql -u root -proot123 practice -e "SELECT COUNT(*) FROM orders;" | tail -1
+```
+
+### 备份与恢复（用 Linux 命令操作 MySQL 数据）
+
+```bash
+# 备份（导出 SQL 文件）
+mysqldump -u root -p practice > practice_backup.sql
+
+# 用 Linux 命令查看备份文件
+head -50 practice_backup.sql           # 前50行
+grep "CREATE TABLE" practice_backup.sql # 找建表语句
+
+# 恢复（导入 SQL 文件）
+mysql -u root -p practice < practice_backup.sql
+```
+
+### 查看 MySQL 日志（用 Linux 命令排查问题）
+
+```bash
+# MySQL 慢查询日志
+sudo tail -f /var/log/mysql/mysql-slow.log
+
+# MySQL 错误日志
+sudo tail -100 /var/log/mysql/error.log | grep -i error
+
+# 实时监控谁在连数据库
+watch -n 2 'ss -tn | grep :3306'
+```
+
+### Shell + SQL 自动化脚本
+
+```bash
+#!/bin/bash
+# check_db.sh - 定时检查数据库状态
+
+echo "===== $(date) ====="
+echo "--- MySQL 进程 ---"
+ps -ef | grep mysql | grep -v grep
+
+echo "--- 端口监听 ---"
+ss -tlnp | grep 3306
+
+echo "--- 数据库状态 ---"
+mysql -u root -proot123 -e "
+SELECT table_name, table_rows 
+FROM information_schema.tables 
+WHERE table_schema = 'practice';"
+
+echo "--- 磁盘 ---"
+df -h /var/lib/mysql
+```
+
+---
+
+**相关笔记**: [[_index]] · [[sql/mysql]] · [[linux-mysql-practice|🧪 Linux+MySQL 动手练习]]

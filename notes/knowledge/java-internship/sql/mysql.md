@@ -91,4 +91,4 @@ DELETE FROM user WHERE id = 1;
 
 ---
 
-**相关笔记**: [[sql/ddl]] · [[sql/dml]] · [[sql/dql]] · [[sql/dcl]] · [[sql/functions]] · [[sql/constraints]] · [[sql/joins]] · [[sql/transactions]]
+**相关笔记**: [[sql/ddl]] · [[sql/dml]] · [[sql/dql]] · [[sql/dcl]] · [[sql/functions]] · [[sql/constraints]] · [[sql/joins]] · [[sql/transactions]] · [[../linux-mysql-practice|🧪 动手练习]]

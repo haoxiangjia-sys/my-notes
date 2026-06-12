@@ -1,0 +1,76 @@
+# ============================================
+# Docker 练习环境 — Linux + MySQL
+# ============================================
+# 使用方法:
+#   启动:  docker compose up -d
+#   停止:  docker compose down
+#   重置:  docker compose down -v && docker compose up -d
+# ============================================
+
+services:
+
+  # ========== MySQL 8.0 数据库 ==========
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-practice
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123           # root 密码
+      MYSQL_DATABASE: practice               # 自动创建的练习数据库
+      MYSQL_USER: dev                        # 额外创建一个开发用户
+      MYSQL_PASSWORD: dev123
+      TZ: Asia/Shanghai                      # 时区
+    ports:
+      - "3306:3306"                          # 主机可以直接连
+    volumes:
+      - mysql-data:/var/lib/mysql            # 数据持久化（删容器不丢数据）
+      - ./mysql-init:/docker-entrypoint-initdb.d  # 初始化 SQL 脚本
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - practice-net
+
+  # ========== Linux 练习容器（Ubuntu 22.04）==========
+  linux:
+    image: ubuntu:22.04
+    container_name: linux-practice
+    restart: unless-stopped
+    command: >
+      bash -c "
+        # 安装常用工具
+        apt-get update &&
+        apt-get install -y --no-install-recommends \
+          vim less curl wget netcat-openbsd \
+          iputils-ping dnsutils telnet \
+          procps htop lsof net-tools iproute2 \
+          mysql-client \
+          sudo &&
+        # 创建练习目录
+        mkdir -p /home/practice/{logs,scripts,data,app} &&
+        # 造一个模拟日志文件
+        echo '2026-06-09 10:00:01 INFO  User login: zhangsan' > /home/practice/logs/app.log &&
+        echo '2026-06-09 10:00:05 ERROR NullPointerException at UserService.java:42' >> /home/practice/logs/app.log &&
+        echo '2026-06-09 10:00:10 INFO  Order created: 1001' >> /home/practice/logs/app.log &&
+        echo '2026-06-09 10:00:15 ERROR Timeout connecting to DB' >> /home/practice/logs/app.log &&
+        echo '2026-06-09 10:00:20 INFO  User login: lisi' >> /home/practice/logs/app.log &&
+        echo '2026-06-09 10:00:25 ERROR NullPointerException at OrderService.java:88' >> /home/practice/logs/app.log &&
+        echo '练习环境已就绪！' > /home/practice/README.txt &&
+        # 保持容器运行
+        tail -f /dev/null
+      "
+    environment:
+      TZ: Asia/Shanghai
+    working_dir: /home/practice
+    networks:
+      - practice-net
+
+networks:
+  practice-net:
+    driver: bridge
+
+volumes:
+  mysql-data:
+    driver: local
